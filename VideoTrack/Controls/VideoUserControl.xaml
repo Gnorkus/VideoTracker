@@ -1,0 +1,42 @@
+﻿<UserControl x:Class="VideoTrack.Controls.VideoUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:VideoTrack.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Background="LightGray">
+        <Label Content="RTSP URL" Margin="0,-3,0,0" Height="30" Width="63"  FontSize="12" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <RichTextBox Name="RTSPStream" Margin="68,0,195,0" Background="White" VerticalContentAlignment="Center" BorderThickness="2" BorderBrush="Black" 
+          FontWeight="Bold" 
+          FontSize="12"
+          Height="22" 
+          VerticalAlignment="Top">
+            <FlowDocument>
+                <Paragraph>
+                    <Run Text="RichTextBox"/>
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
+        <!--Image Margin="5,35,5,5" Name="_PictureBox"/-->
+
+        <ScrollViewer x:Name="MainScrollViewer"
+              CanContentScroll="False"
+              Margin="5,30,5,5"
+              VerticalScrollBarVisibility="Auto"
+              HorizontalScrollBarVisibility="Auto"
+              PreviewMouseWheel="MainScrollViewer_PreviewMouseWheel"
+                      >
+            <Grid x:Name="ViewBox_CanvasMain">
+                <Image Name="_PictureBox">
+                </Image>
+            </Grid>
+        </ScrollViewer>
+
+        <Border BorderBrush="Black" BorderThickness="2" Margin="2,24,2,2"/>
+        <Button Content="Snapshot" FontSize="12" Margin="0,0,132,0" Width="61" Height="22" Click="VideoUserControl_SnapshotClicked" BorderThickness="2" BorderBrush="Black" HorizontalAlignment="Right"  VerticalAlignment="Top" />
+        <CheckBox Name="PauseStream" FontSize="12" Content="Pause" Margin="0,4,4,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="53" Checked="OnPauseStream" Unchecked="OnStartStream"/>
+        <CheckBox Checked="CalibrateStream_Checked" Unchecked="CalibrateStream_Unchecked" Name="CalibrateStream" FontSize="12" Content="Calibrate" Margin="0,4,57,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="70"/>
+    </Grid>
+</UserControl>

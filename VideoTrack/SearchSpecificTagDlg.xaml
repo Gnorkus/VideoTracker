@@ -1,0 +1,23 @@
+﻿<Window x:Class="VideoTrack.SearchSpecificTagDlg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoTrack"
+        mc:Ignorable="d"
+        Title="Search For Specific Tags" Height="401" Width="389"
+        Closing="Window_Closing">
+    <Grid>
+        <CheckBox Name="SearchingForTags" Content="Searching" Margin="0,10,10,0" VerticalAlignment="Top" RenderTransformOrigin="-0.167,-1.371" HorizontalAlignment="Right" Width="71" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,30,0,0" TextWrapping="Wrap" Text="List to Search For" VerticalAlignment="Top"/>
+        <TextBox x:Name="ListToSearchFor" HorizontalAlignment="Left" Margin="10,51,0,10" TextWrapping="Wrap" Text="" Width="129" AcceptsReturn="True"/>
+        <DataGrid x:Name="FoundItems" AutoGenerateColumns="False" ItemsSource="{Binding Rows, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsReadOnly="True" Margin="144,51,10,10" CanUserSortColumns="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Item Tag" Width="60" Binding="{Binding ItemTag}" />
+                <DataGridTextColumn Header="Last Seen on Camera" Width="160" Binding="{Binding FoundCamera}" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <TextBlock HorizontalAlignment="Left" Margin="145,30,0,0" TextWrapping="Wrap" Text="Found Items" VerticalAlignment="Top"/>
+
+    </Grid>
+</Window>

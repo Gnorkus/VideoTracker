@@ -1,0 +1,85 @@
+﻿<Window x:Class="VideoTrack.Main"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lcmd="clr-namespace:MillerMetal.VideoTrack.Commands"
+        xmlns:mdi="clr-namespace:WPF.MDI;assembly=WPF.MDI"
+        Title="WPF.MDI VideoTrack" Height="362" Width="684" WindowState="Maximized"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+    <DockPanel>
+        <mdi:MdiContainer Name="Container">
+            <mdi:MdiContainer.Menu>
+                <Menu DockPanel.Dock="Top">
+                    <MenuItem Header="_File">
+                        <MenuItem Header="_Open" InputGestureText="Ctrl+O" Command="{x:Static lcmd:VideoTrackCommands.OpenConfig}"/>
+                        <MenuItem Header="_Save" InputGestureText="Ctrl+S" Command="{x:Static lcmd:VideoTrackCommands.SaveConfig}"/>
+                        <Separator/>
+                        <MenuItem x:Name="RecentConfigurations" Header="Recent Configurations">
+                            <MenuItem Header="None"/>
+                        </MenuItem>
+                    </MenuItem>
+                    <MenuItem Header="_Track">
+                        <MenuItem Header="New _Video Window" Click="AddVideoWindow_Click" />
+                        <MenuItem Header="New _Map Window" InputGestureText="Ctrl+M" Command="{x:Static lcmd:VideoTrackCommands.NewMapWindow}" />
+                    </MenuItem>
+                    <MenuItem Header="T_heme">
+                        <MenuItem Header="Generic" Name="Generic" ToolTip="Generic Visual Studio designer theme" Click="Generic_Click" />
+                        <MenuItem Header="Luna" Name="Luna" ToolTip="Blue Windows XP theme" Click="Luna_Click" />
+                        <MenuItem Header="Aero" Name="Aero" ToolTip="Windows Vista/7 theme"  Click="Aero_Click" />
+                    </MenuItem>
+                    <MenuItem Header="_Calibration">
+                        <MenuItem Header="S_tart All Windows"  InputGestureText="Ctrl+T" Command="{x:Static lcmd:VideoTrackCommands.StartAllCalib}"/>
+                        <MenuItem Header="Start Cu_rrent Window"  InputGestureText="Ctrl+R" Command="{x:Static lcmd:VideoTrackCommands.StartCurCalib}"/>
+                        <MenuItem Header="Stop All _Windows" InputGestureText="Ctrl+W" Command="{x:Static lcmd:VideoTrackCommands.StopCalib}"/>
+                        <Separator/>
+                        <MenuItem Header="_Print Targets" InputGestureText="Ctrl+P" Command="{x:Static lcmd:VideoTrackCommands.PrintTargets}"/>
+                    </MenuItem>
+                    <MenuItem Header="_Search">
+                        <MenuItem Header="Specific _Tag" Click="SearchSpecificTag_Click" />
+                    </MenuItem>
+                    <MenuItem Header="S_erver">
+                    </MenuItem>
+                    <MenuItem Header="_Windows" x:Name="WindowsMenu" x:FieldModifier="private" />
+                </Menu>
+            </mdi:MdiContainer.Menu>
+            <!--mdi:MdiChild Title="Empty Window Using XAML" />
+            <mdi:MdiChild Name="Window1" Title="Window Using XAML" Position="20,15" Icon="OriginalLogo.png">
+                <StackPanel>
+                    <Button Name="DisableMinimize" Height="20" Click="DisableMinimize_Click">Disable Minimize</Button>
+                    <Button Name="EnableMinimize" Height="20" Click="EnableMinimize_Click">Enable Minimize</Button>
+                    <Button Name="DisableMaximize" Height="20" Click="DisableMaximize_Click">Disable Maximize</Button>
+                    <Button Name="EnableMaximize" Height="20" Click="EnableMaximize_Click">Enable Maximize</Button>
+                    <Button Name="DisableClose" Height="20" Click="DisableClose_Click">Disable Close</Button>
+                    <Button Name="EnableClose" Height="20" Click="EnableClose_Click">Enable Close</Button>
+                    <Button Name="ShowIcon" Height="20" Click="ShowIcon_Click">Show Icon</Button>
+                    <Button Name="HideIcon" Height="20" Click="HideIcon_Click">Hide Icon</Button>
+                </StackPanel>
+            </mdi:MdiChild-->
+        </mdi:MdiContainer>
+    </DockPanel>
+
+    <!-- The following section of the window defines the event handlers for the command to be executed
+         CanExecute and Executed are the command events and the 2 event handlers have to be set in your code
+         to set if the command can execute and to implement the command code. -->
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static lcmd:VideoTrackCommands.OpenConfig}"  Executed="OpenConfig_Executed" />
+        <CommandBinding Command="{x:Static lcmd:VideoTrackCommands.SaveConfig}"  Executed="SaveConfig_Executed" />
+        <CommandBinding Command="{x:Static lcmd:VideoTrackCommands.StartAllCalib}"  Executed="StartAllCalib_Executed" />
+        <CommandBinding Command="{x:Static lcmd:VideoTrackCommands.StartCurCalib}"  Executed="StartCurCalib_Executed" />
+        <CommandBinding Command="{x:Static lcmd:VideoTrackCommands.StopCalib}"  Executed="StopCalib_Executed" />
+        <CommandBinding Command="{x:Static lcmd:VideoTrackCommands.PrintTargets}"  Executed="PrintTargets_Executed" />
+        <CommandBinding Command="{x:Static lcmd:VideoTrackCommands.NewMapWindow}"  Executed="NewMapWindow_Executed" />
+    </Window.CommandBindings>
+
+    <!-- The following section of the window assigns to the command a combination of keys used to execute the command.
+         in my case, Ctrl+O executes the code put into the OpenConfig_Executed event handler -->
+    <Window.InputBindings>
+        <KeyBinding Command="{x:Static lcmd:VideoTrackCommands.OpenConfig}" CommandParameter="" Gesture="Ctrl+O" />
+        <KeyBinding Command="{x:Static lcmd:VideoTrackCommands.SaveConfig}" CommandParameter="" Gesture="Ctrl+S" />
+        <KeyBinding Command="{x:Static lcmd:VideoTrackCommands.StartAllCalib}" CommandParameter="" Gesture="Ctrl+T" />
+        <KeyBinding Command="{x:Static lcmd:VideoTrackCommands.StartCurCalib}" CommandParameter="" Gesture="Ctrl+R" />
+        <KeyBinding Command="{x:Static lcmd:VideoTrackCommands.StopCalib}" CommandParameter="" Gesture="Ctrl+W" />
+        <KeyBinding Command="{x:Static lcmd:VideoTrackCommands.PrintTargets}" CommandParameter="" Gesture="Ctrl+P" />
+        <KeyBinding Command="{x:Static lcmd:VideoTrackCommands.NewMapWindow}" CommandParameter="" Gesture="Ctrl+M" />
+    </Window.InputBindings>
+</Window>
