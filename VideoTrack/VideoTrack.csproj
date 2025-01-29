@@ -113,6 +113,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ConfigurationHelper.cs" />
+    <Compile Include="Controls\VideoUserControl_DatabaseFunctions.cs" />
     <Compile Include="Controls\MapUserControl.xaml.cs">
       <DependentUpon>MapUserControl.xaml</DependentUpon>
     </Compile>
@@ -220,13 +221,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Emgu.CV">
-      <Version>4.10.0.5680</Version>
+      <Version>4.9.0.5494</Version>
     </PackageReference>
-    <PackageReference Include="Emgu.CV.runtime.windows">
-      <Version>4.10.0.5680</Version>
+    <PackageReference Include="Emgu.CV.runtime.windows.cuda">
+      <Version>4.9.0.5494</Version>
     </PackageReference>
     <PackageReference Include="Emgu.CV.UI">
-      <Version>4.10.0.5680</Version>
+      <Version>4.9.0.5494</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
       <Version>9.0.1</Version>

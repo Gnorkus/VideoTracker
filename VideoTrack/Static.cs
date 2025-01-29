@@ -23,7 +23,7 @@ namespace VideoTrack
         }
 
 
-        public static bool bDetectMarkers = true;
+        public static bool bDetectMarkers = false;
         public static bool bCopyToPictureBox = true;
 
         public static double m_dPositionTolerance = 6.0;

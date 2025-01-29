@@ -54,7 +54,6 @@ namespace VideoTrack.Controls
         private bool m_bCheckForCalib;
 
         VideoCapture m_capture;
-        BitmapImage bitmap;
         Thread processingThread;
         Thread readingThread;
         CancellationTokenSource cancellationTokenSource;
@@ -104,15 +103,16 @@ namespace VideoTrack.Controls
         bool _bCalibrationComplete = false;
         bool _bSnapshot = false;
         bool m_bIsPaused = false;
+        int m_nCameraPK = 0;
         string RTSPUrl = "";
 
         // Each time we instantiate a video window, we create
         // a new connection to the required databases.  This is
         // because Npgsql is not thread safe.
-        //NpgsqlConnection m_Conn = new NpgsqlConnection(Static.defaultConnString);
-        //Camera m_CameraDB = null;
-        //AssetLocationHistory m_AssetDB = null;
-        //LocationState m_LocationStateDB = null;
+        NpgsqlConnection m_connDatabase = new NpgsqlConnection(Static.defaultConnString);
+        Camera m_CameraDB = null;
+        AssetLocationHistory m_AssetDB = null;
+        LocationState m_LocationStateDB = null;
 
         // This loops through all of the positions of the objects we've found.
         // We'll be checking on the distance changed for the markers to see if it exceeds
@@ -122,7 +122,7 @@ namespace VideoTrack.Controls
         {
             try
             {
-                //m_Conn.Open();
+                //m_connDatabase.Open();
 
                 // Check to see if the position database exists or not
                 // If it doesn't then
@@ -136,7 +136,7 @@ namespace VideoTrack.Controls
             }
             finally
             {
-                //m_Conn.Close();
+                //m_connDatabase.Close();
             }
         }
 
@@ -160,14 +160,16 @@ namespace VideoTrack.Controls
 
             // Due to limitations, we cannot simply initialize in the
             // constructor.  
-           // m_CameraDB = new Camera();
-           // m_CameraDB.Initialize(ref m_Conn);
+            m_CameraDB = new Camera();
+            m_CameraDB.Initialize(ref m_connDatabase);
 
-           // m_AssetDB = new AssetLocationHistory();
-           // m_AssetDB.Initialize(ref m_Conn);
+            m_AssetDB = new AssetLocationHistory();
+            m_AssetDB.Initialize(ref m_connDatabase);
 
-           // m_LocationStateDB = new LocationState();
-           // m_LocationStateDB.Initialize(ref m_Conn);
+            m_LocationStateDB = new LocationState();
+            m_LocationStateDB.Initialize(ref m_connDatabase);
+
+            //Emgu.CV.Cuda.CudaCannyEdgeDetector
 
             // Kill the database table so we can create it again
             // to be compatible with MSSQL server
@@ -210,7 +212,11 @@ namespace VideoTrack.Controls
 
             this.BorderThickness = new System.Windows.Thickness(1.0);
 
-            tstr = this.cameraParams.szRTSPStreamURL;
+            RTSPUrl = tstr = this.cameraParams.szRTSPStreamURL;
+
+            // Associate a CameraPK with this from the Camera database.
+            m_nCameraPK = GetCameraPKFromDatabase();
+
             ScaleTransform st = ViewBox_CanvasMain.LayoutTransform as ScaleTransform;
             if (st == null)
             {

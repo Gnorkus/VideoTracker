@@ -23,7 +23,7 @@ namespace VideoTrack
             set
             {
                 m_Marker = value;
-                ItemTag = m_Marker.PairID().ToString("D6");
+                ItemTag = m_Marker.PairID.ToString("D6");
                 FoundCamera = m_Marker.PairDescription;
             }
         }
@@ -71,7 +71,7 @@ namespace VideoTrack
             if (obj is MarkerPair otherMarker)
             {
                 return m_Marker.PairDescription == otherMarker.PairDescription
-                    && m_Marker.PairID() == otherMarker.PairID();
+                    && m_Marker.PairID == otherMarker.PairID;
             }
             return false;
         }

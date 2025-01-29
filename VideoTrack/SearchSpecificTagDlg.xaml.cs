@@ -140,10 +140,10 @@ namespace VideoTrack
 
                             foreach (var p in vu.m_listCurrentMarker)
                             {
-                                if (listIDsToFind.Contains(p.Value.PairID()))
+                                if (listIDsToFind.Contains(p.Value.PairID))
                                 {
                                     listFoundMarkers.Add(p.Value);
-                                    listFoundIDs.Add(p.Value.PairID());
+                                    listFoundIDs.Add(p.Value.PairID);
                                 }
                             }
                         }

@@ -42,8 +42,29 @@ namespace VideoTrack
             // 
             if (commandLineArgs.Length > 0 )
                 szFileOpenFromCmdLine = commandLineArgs[0];
+
+            // Enable detailed tracing for data binding errors
+            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error;
+            PresentationTraceSources.DataBindingSource.Listeners.Add(new CustomTraceListener());
+
         }
 
+        // https://stackoverflow.com/questions/47391020/cannot-find-source-for-binding-with-reference-relativesource-findancestor
+        public class CustomTraceListener : TraceListener
+        {
+            public override void Write(string message)
+            {
+                // Optional: Handle if needed
+            }
+
+            public override void WriteLine(string message)
+            {
+                if (message.Contains("System.Windows.Data Error: 4"))
+                {
+                    Debugger.Break(); // Trigger a breakpoint
+                }
+            }
+        }
     }
 
 }

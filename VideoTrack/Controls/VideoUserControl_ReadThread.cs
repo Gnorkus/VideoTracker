@@ -122,7 +122,7 @@ namespace VideoTrack.Controls
                 }
                 catch (Exception e) 
                 {
-                    Debug.Write("Processing threa hit an exception!!!  " + e.ToString());
+                    Debug.Write("Read thread hit an exception!!!  " + e.ToString());
                     return;
                 }
 

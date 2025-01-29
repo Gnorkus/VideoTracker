@@ -8,7 +8,7 @@ namespace VideoTrack.Model
 {
     public class AssetLocationHistory : CoreDatabase
     {
-        public int AssetLocationHistoryPK { get; set; }   // unique key
+        [PrimaryIdentityKey] public int AssetLocationHistoryPK { get; }   // unique key
         public int AssetFK { get; set; }                  // 
         public int AssetType { get; set; }
         public int CameraFK { get; set; }
@@ -16,6 +16,7 @@ namespace VideoTrack.Model
         public double PosY { get; set; }
         public double PosZ { get; set; }
         public DateTime Date { get; set; }
+        public bool IsStale { get; set; }
         public int LocationStateFK { get; set; }
     }
 }

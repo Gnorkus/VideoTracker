@@ -8,7 +8,7 @@ namespace VideoTrack.Model
 {
     public class LocationState : CoreDatabase
     {
-        public int LocationStatePK { get; set; }
-        public string LocationStateDesc { get; set; }
+        [PrimaryIdentityKey] public int LocationStatePK { get; }
+        [MaxLength(50)] public string LocationStateDesc { get; set; }
     }
 }

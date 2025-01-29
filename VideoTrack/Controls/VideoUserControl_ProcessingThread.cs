@@ -23,6 +23,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Media;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
+using System.CodeDom;
+using Npgsql;
 
 namespace VideoTrack.Controls
 {
@@ -50,9 +52,83 @@ namespace VideoTrack.Controls
         Mat m_arrRotMatrices = new Mat();
         List<Quaternions> Qs = new List<Quaternions>();
         List<MarkerPair> listMarkersToRemove = new List<MarkerPair>();
+        List<MarkerPair> listMarkersToDraw = new List<MarkerPair>();
 
 
 
+        public async void PaintOntoPictureBox ( Emgu.CV.Mat img )
+        {
+            BitmapImage bitmap;
+
+            using (var stream = new MemoryStream())
+            {
+                // Convert an OpenCV (Emgu) Mat to a bitmap file stream
+                img.ToImage<Bgr, byte>().ToBitmap().Save(stream, ImageFormat.Bmp);
+
+                // Create a bitmap image and copy the file stream to the bitmap imagee
+                bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.StreamSource = new MemoryStream(stream.ToArray());
+                bitmap.EndInit();
+
+                // Finally, display the bitmap image in the main window's _PictureBox.
+                // A _PictureBox is an System.Windows.Controls.Image object.
+                bitmap.Freeze();
+
+                if (Static.bCopyToPictureBox)
+                {
+                    try
+                    {
+                        await _PictureBox.Dispatcher.InvokeAsync(() => { _PictureBox.Source = bitmap; }, System.Windows.Threading.DispatcherPriority.SystemIdle);
+                    }
+                    catch (Exception e) { }
+                    finally { }
+                }
+            };
+        }
+
+        public void MainWindow_ProcessVideoThread_DrawMarkerTagIDs(
+              ref Emgu.CV.Mat       matResultBitmap
+            , ref List<MarkerPair>  listMarkersToDraw )
+        {
+            System.Drawing.Point pt ;
+
+            foreach (MarkerPair m in listMarkersToDraw)
+            {
+                // Average of the corners
+                pt = m.GetCenter();
+
+                //CvInvoke.Polylines(_colorMat, m.GetPoly(), true, new MCvScalar(0, 255, 255), 7);
+                CvInvoke.Polylines(matResultBitmap, m.GetPoly(2), false, new MCvScalar(0, 255, 255), 7);
+
+                if (bUseRotatableText)
+                {
+                    // Get the polylines for the rotatable text.
+                    List<List<System.Drawing.Point>> pts = ConvertFontToPolylines(m.PairID.ToString()
+                                                                    , "Segoe UI"
+                                                                    , 30f
+                                                                    , m.UnderlineStart    // starting point of text baseline
+                                                                    , m.UnderlineFinish); // ending point of text baseline
+
+                    foreach (List<System.Drawing.Point> pts2 in pts)
+                    {
+                        CvInvoke.Polylines(matResultBitmap, pts2.ToArray(), false, new MCvScalar(255, 255, 255), 5);
+                        CvInvoke.FillPoly(matResultBitmap, new VectorOfPoint(pts2.ToArray()), new MCvScalar(0, 0, 0));
+                    }
+                }
+                else
+                {
+                    CvInvoke.PutText(matResultBitmap, m.PairID.ToString()
+                        , m.BoxLeftCenter, FontFace.HersheyPlain, 1.5
+                        , new MCvScalar(255, 255, 255, 255), 10);
+
+                    CvInvoke.PutText(matResultBitmap, m.PairID.ToString()
+                        , m.BoxLeftCenter, FontFace.HersheyPlain, 1.5
+                        , new MCvScalar(0, 0, 0, 255), 1);
+                }
+            }
+
+        }
 
         public void MainWindow_ProcessVideoThread_DetectMarkers()
         {
@@ -64,8 +140,6 @@ namespace VideoTrack.Controls
                 tstrCountDown = "Calibrated";
             else
                 tstrCountDown = "";
-
-            listMarkersToRemove.Clear();
 
             // Before converting to bitmap, find the markers
             Emgu.CV.Aruco.ArucoInvoke.DetectMarkers(_colorMat, myDict, myMarkerCorners, myMarkerIds, myDetectorParams, myRejects);
@@ -217,13 +291,20 @@ namespace VideoTrack.Controls
                                         // Convert the translation vector from a Mat to MCvPoint3D64f
                                         MCvPoint3D64f ptCurPos;
 
-                                        if (m_arrRotVecs.IsEmpty)
+                                        if (_bCalibrationComplete==false)
                                         {
+                                            // If there aren't any rotation vectors (meaning we did not
+                                            // have the camera calibrated yet), we cannot measure the
+                                            // exact location of an item.  We'll have to use the camera
+                                            // itself.
                                             ptCurPos = new MCvPoint3D64f(0, 0, 0);
                                         }
                                         else
                                         {
-                                            dMat matCurPos = m_arrTransVecs.Row(i);
+                                            // If the camera was calibrated, then we can find out 
+                                            // the exact location in space of the item, so we can
+                                            // check to see if it has moved.
+                                            Mat matCurPos = m_arrTransVecs.Row(i);
 
                                             unsafe
                                             {
@@ -242,7 +323,8 @@ namespace VideoTrack.Controls
                                                                       , myTitle
                                                                       , markerptfs[i]
                                                                       , markerptfs[j]
-                                                                      , ptCurPos );
+                                                                      , ptCurPos
+                                                                      , m_nCameraPK );
 
                                         // If our list contains the key, then copy
                                         // the current location to that key to refresh
@@ -253,10 +335,10 @@ namespace VideoTrack.Controls
                                         // we need to make sure the table has a camera ID also
                                         // so that we don't end up confusing the system.
 
-                                        if (m_listCurrentMarker.ContainsKey(m.PairID()))
-                                            m_listCurrentMarker[m.PairID()].UpdateCurrent(m);
+                                        if (m_listCurrentMarker.ContainsKey(m.PairID))
+                                            m_listCurrentMarker[m.PairID].UpdateCurrent(m);
                                         else
-                                            m_listCurrentMarker.Add(m.PairID(), m);
+                                            m_listCurrentMarker.Add(m.PairID, m);
                                     }
                                 }
                             }
@@ -267,70 +349,33 @@ namespace VideoTrack.Controls
                         }
                     }
                 }
-
-
-
-                //Main wnd = (Main)Application.Current.MainWindow;
-
-                //wnd.dlgSearchSpecificTag.SearchingForTags.Dispatcher.Invoke(() => bCheckForSearching = (bool)(wnd.dlgSearchSpecificTag.SearchingForTags.IsChecked));
-
-
-
             }
             #endregion
 
             // This loop draws currently alive markers, and decreases their
             // stay alive count.  If the stay alive count is less than zero,
             // it removes the item.
+            listMarkersToRemove.Clear();
+            listMarkersToDraw.Clear();
+
             foreach (var m in m_listCurrentMarker)
             {
                 if (m.Value.IsAlive())
-                {
-                    // Average of the corners
-                    pt = m.Value.GetCenter();
-
-                    //CvInvoke.Polylines(_colorMat, m.GetPoly(), true, new MCvScalar(0, 255, 255), 7);
-                    CvInvoke.Polylines(_colorMat, m.Value.GetPoly(2), false, new MCvScalar(0, 255, 255), 7);
-
-                    if (bUseRotatableText)
-                    {
-                        // Get the polylines for the rotatable text.
-                        List<List<System.Drawing.Point>> pts = ConvertFontToPolylines(m.Value.PairID().ToString()
-                                                                        , "Segoe UI"
-                                                                        , 30f
-                                                                        , m.Value.UnderlineStart()    // starting point of text baseline
-                                                                        , m.Value.UnderlineFinish()); // ending point of text baseline
-
-                        foreach (List<System.Drawing.Point> pts2 in pts)
-                        {
-                            CvInvoke.Polylines(_colorMat, pts2.ToArray(), false, new MCvScalar(255, 255, 255), 5);
-                            CvInvoke.FillPoly(_colorMat, new VectorOfPoint(pts2.ToArray()), new MCvScalar(0, 0, 0));
-
-                            //CvInvoke.Polylines(_colorMat, pts2.ToArray(), false, new MCvScalar(0, 0, 0), 1);
-                            //CvInvoke.FillPoly(_colorMat, new VectorOfPoint(pts2.ToArray()), new MCvScalar(255,255,255));
-                        }
-                    }
-                    else
-                    {
-                        CvInvoke.PutText(_colorMat, m.Value.PairID().ToString()
-                            , m.Value.BoxLeftCenter(), FontFace.HersheyPlain, 1.5
-                            , new MCvScalar(255, 255, 255, 255), 10);
-
-                        CvInvoke.PutText(_colorMat, m.Value.PairID().ToString()
-                            , m.Value.BoxLeftCenter(), FontFace.HersheyPlain, 1.5
-                            , new MCvScalar(0, 0, 0, 255), 1);
-                    }
-                }
+                    listMarkersToDraw.Add(m.Value);
                 else
-                {
                     listMarkersToRemove.Add(m.Value);
-                }
             }
+
+            MainWindow_ProcessVideoThread_DrawMarkerTagIDs(ref _colorMat, ref listMarkersToDraw);
+
+            UpdateDatabaseEntries(listMarkersToDraw);
+            RetireDatabaseEntries(listMarkersToRemove);
+
 
             // Finally, remove the marker from the list if it has
             // expired and is no longer seen.
             foreach (MarkerPair m in listMarkersToRemove)
-                m_listCurrentMarker.Remove(m.PairID());
+                m_listCurrentMarker.Remove(m.PairID);
         }
 
 
@@ -349,7 +394,7 @@ namespace VideoTrack.Controls
                                                    , _checkerCorners
                                                    , CalibCbType.FastCheck);
 
-            /*
+            /* we may wish to go for better accuracy during calibration
             if (!bFound) 
                 bFound = CvInvoke.FindChessboardCorners(_greyMat
                                        , _patternSize
@@ -554,35 +599,8 @@ namespace VideoTrack.Controls
                                     , new System.Drawing.Point(20, 50), FontFace.HersheyPlain, 3
                                     , new MCvScalar(0, 0, 0, 255), 1);
 
-                                using (var stream = new MemoryStream())
-                                {
-                                    // Convert an OpenCV (Emgu) Mat to a bitmap file stream
-                                    _colorMat.ToImage<Bgr, byte>().ToBitmap().Save(stream, ImageFormat.Bmp);
+                                PaintOntoPictureBox(_colorMat);
 
-                                    //Bitmap mybm = _colorMat.ToImage<Bgr, byte>().ToBitmap();
-
-                                    // Create a bitmap image and copy the file stream to the bitmap imagee
-                                    bitmap = new BitmapImage();
-                                    bitmap.BeginInit();
-                                    bitmap.StreamSource = new MemoryStream(stream.ToArray());
-                                    bitmap.EndInit();
-
-                                    // Finally, display the bitmap image in the main window's _PictureBox.
-                                    // A _PictureBox is an System.Windows.Controls.Image object.
-                                    bitmap.Freeze();
-
-                                    //Task.Run(action: () =>
-                                    //{   
-                                    //    OnPropertyChanged(nameof(LiveImageSource));
-                                    //});
-
-
-                                    if (Static.bCopyToPictureBox)
-                                    {
-                                        await _PictureBox.Dispatcher.InvokeAsync(() => { _PictureBox.Source = bitmap; }, System.Windows.Threading.DispatcherPriority.SystemIdle);
-
-                                    }
-                                };
 
                             }
                             else
@@ -594,10 +612,23 @@ namespace VideoTrack.Controls
 
                     //CalibrateStream.Dispatcher.Invoke(() => _bShowDistance = (bool)(ShowDistance.IsChecked));
                 }
+                catch (PostgresException ex)
+                {
+                    // Postgres-specific exception details
+                    Debug.WriteLine($"PostgreSQL Error Code: {ex.SqlState}");
+                    Debug.WriteLine($"Message: {ex.Message}");
+                    Debug.WriteLine($"Detail: {ex.Detail}");
+                    Debug.WriteLine($"Hint: {ex.Hint}");
+                    Debug.WriteLine($"Position: {ex.Position}");
+                    Debug.WriteLine($"Internal Query: {ex.InternalQuery}");
+                    Debug.WriteLine($"Where: {ex.Where}");
+                    Debug.WriteLine($"ERRRRRRRRRRRRRR");
+                    Debug.WriteLine($"Done");
+                }
                 catch (Exception e)
                 {
                     // If we had an exception, we will simply exit the thread
-                    Debug.Write("Processing threa hit an exception!!!  "+e.ToString());
+                    Debug.Write("Processing thread hit an exception!!!  "+e.ToString());
                 }
 
 

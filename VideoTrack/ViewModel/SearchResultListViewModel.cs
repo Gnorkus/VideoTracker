@@ -52,7 +52,7 @@ namespace VideoTrack
             SearchResultRowViewModel rowMightAdd = 
                 new SearchResultRowViewModel
                 {
-                    ItemTag = markerPair.PairID().ToString("D6"),
+                    ItemTag = markerPair.PairID.ToString("D6"),
                     FoundCamera = markerPair.PairDescription
                 };
 
@@ -81,7 +81,7 @@ namespace VideoTrack
         {
             foreach (SearchResultRowViewModel row in Rows)
             {
-                if (row.ItemTag == markerPair.PairID().ToString("D6"))
+                if (row.ItemTag == markerPair.PairID.ToString("D6"))
                 {
                     // If we found a matching row ItemTag
                     // then remove the specified row.

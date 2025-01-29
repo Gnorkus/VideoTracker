@@ -13,14 +13,16 @@ namespace VideoTrack.Controls
 {
     public partial class MarkerPair : IEquatable<MarkerPair>
     {
-        const int DEFAULT_MARKER_COUNTDOWN = 60;
+        public const int DEFAULT_MARKER_COUNTDOWN = 60;
 
         int id1, id2;
-        int nCountDown;
         PointF[] poly1, poly2;
         string _szPairDescription;
-        int nCameraId;
         MCvPoint3D64f m_matLastKnownPos;
+        DateTime m_lastTimeSeen;
+
+        int m_nCameraFK = 0;
+        public int CameraFK { get { return m_nCameraFK; } set { m_nCameraFK = value; } }
 
         private PointF AddF (PointF a, PointF b)
         {
@@ -37,11 +39,13 @@ namespace VideoTrack.Controls
             return Point.Round(new PointF(a.X + b.X, a.Y + b.Y));
         }
 
-        private Point Average(PointF a, PointF b)
+        public Point Average(PointF a, PointF b)
         {
             return Point.Round(new PointF((a.X + b.X) / 2.0f, (a.Y + b.Y) / 2.0f));
         }
 
+
+        public int nCountDown { get; set; }
 
         public string PairDescription 
         {  
@@ -51,71 +55,46 @@ namespace VideoTrack.Controls
 
         public MarkerPair() { id1 = -1; id2 = -1; _szPairDescription = ""; nCountDown = DEFAULT_MARKER_COUNTDOWN; }
 
-        public int PairID()
-        {
-            return id1 + id2 * 1000;
-        }
+        public int PairID { get { return id1 + id2 * 1000; } }
 
-        public Size Direction()
-        {
-            return new Size((int)(poly2[1].Y - poly1[0].Y), (int)(poly2[1].X - poly1[0].X));
-        }
+        public Size Direction { get { return new Size((int)(poly2[1].Y - poly1[0].Y), (int)(poly2[1].X - poly1[0].X)); } }
 
-        public Point UnderlineStart()
-        {
-            return Point.Round(poly1[0]);
-        }
+        public Point UnderlineStart { get { return Point.Round(poly1[0]); } }
 
-        public Point BoxTopLeft()
-        {
-            return Point.Round(poly1[0]);
-        }
+        public Point BoxTopLeft { get { return Point.Round(poly1[0]); }  }
 
-        public Point BoxLeftCenter()
-        {
-            return Average(poly1[0],poly1[3]);
-        }
+        public Point BoxLeftCenter { get { return Average(poly1[0], poly1[3]); } }
 
-        public Point BoxTopCenter()
-        {
-            return Average(poly1[0], poly2[1]);
-        }
+        public Point BoxTopCenter { get { return Average(poly1[0], poly2[1]); } }
 
-        public Point BoxRightCenter()
-        {
-            return Average(poly2[1], poly2[2]);
-        }
+        public Point BoxRightCenter { get { return Average(poly2[1], poly2[2]); } }
 
-        public Point BoxBottomCenter()
-        {
-            return Average(poly1[3], poly2[2]);
-        }
+        public Point BoxBottomCenter { get { return Average(poly1[3], poly2[2]); } }
+
+        public Point BoxBottomLeft { get { return Point.Round(poly1[3]); } }
+
+        public Point BoxTopRight { get { return Point.Round(poly2[1]); } }
+
+        public Point BoxBottomRight { get { return Point.Round(poly2[2]); } }
 
 
-        public Point BoxBottomLeft()
-        {
-            return Point.Round(poly1[3]);
-        }
-
-        public Point BoxTopRight()
-        {
-            return Point.Round(poly2[1]);
-        }
-
-        public Point BoxBottomRight()
-        {
-            return Point.Round(poly2[2]);
-        }
-
-
-        public Point UnderlineFinish()
-        {
-            return Point.Round(poly2[1]);
-        }
+        public Point UnderlineFinish { get { return Point.Round(poly2[1]); } }
 
         // Checking an item will decrement it's count
         public bool IsAlive()
         {
+            // Record the timestamp if we actually saw it.
+            // Each time we actually see a marker, it's
+            // count down is reset to the default.
+            if (nCountDown == DEFAULT_MARKER_COUNTDOWN)
+                m_lastTimeSeen = DateTime.Now;
+
+            // Decrement the countdown.  We do this 
+            // just in case noise or other issues cause 
+            // marker not to be seen.  We should 
+            // differentiate between colors drawn if
+            // an object was seen, wasn't seen but still
+            // is active, wasn't seen but is retired.
             nCountDown--;
             if (nCountDown > 0)
                 return true;
@@ -139,6 +118,7 @@ namespace VideoTrack.Controls
                           , PointF[] poly1new
                           , PointF[] poly2new 
                           , MCvPoint3D64f curpos
+                          , int nCameraPK
                             )  
         { 
             id1 = id1new; 
@@ -152,6 +132,8 @@ namespace VideoTrack.Controls
             poly1new.CopyTo(poly1, 0);
             poly2new.CopyTo(poly2, 0);
             nCountDown = DEFAULT_MARKER_COUNTDOWN;
+
+            CameraFK = nCameraPK;
         }
 
         public Point[] GetPoly(int nNumElem=4)
@@ -200,7 +182,7 @@ namespace VideoTrack.Controls
 
         public bool Equals(MarkerPair other)
         {
-            if (this.PairID() == other.PairID())
+            if (this.PairID == other.PairID)
                 return true;
             else
                 return false;
@@ -208,7 +190,7 @@ namespace VideoTrack.Controls
 
         public override int GetHashCode()
         {
-            return PairID();
+            return PairID;
         }
     }
 

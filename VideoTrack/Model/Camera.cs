@@ -3,7 +3,7 @@ namespace VideoTrack.Model
 {
     public class Camera : CoreDatabase
     {
-        public int CameraPK { get; set; }
+        [PrimaryIdentityKey] public int CameraPK { get; }
 
         public string CameraMatrix {  get; set; }
         public string DistortionMatrix { get; set; }
